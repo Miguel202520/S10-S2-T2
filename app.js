@@ -107,10 +107,10 @@ app.get('/', (req,res) => {
         <div class="card">
             <h2>🟢 Nuevo Producto</h2>
             <div class="form-grid">
-                <input placeholder="Ej: Laptop Lenovo">
-                <input placeholder="Ej: 2500">
-                <input placeholder="Ej: 10">
-                <button class="btn-green">💾 Guardar</button>
+                <input id="nombre" placeholder="Ej: Laptop Lenovo">
+                <input id="precio" type="number" placeholder="Ej: 2500">
+                <input id="stock" type="number" placeholder="Ej: 10">
+                <button id="guardar" class="btn-green">💾 Guardar</button>
             </div>
         </div>
 
@@ -127,16 +127,8 @@ app.get('/', (req,res) => {
                 <th>Acciones</th>
                 </tr>
             </thead>
-            <tbody>
-                <tr>
-                <td>1</td>
-                <td>Laptop Lenovo</td>
-                <td>2500.00</td>
-                <td>10</td>
-                <td class="actions">
-                    <button class="btn-yellow">✏️ Editar</button>
-                    <button class="btn-red">🗑 Eliminar</button>
-                </td>
+            <tbody id="productos-tbody">
+                <!-- Productos se cargarán aquí -->
             </tbody>
             </table>
         </div>
@@ -146,11 +138,103 @@ app.get('/', (req,res) => {
         </footer>
 
         </div>
+
+        <script>
+            const API_URL = 'http://localhost:3000/productos';
+
+            async function cargarProductos() {
+                try {
+                    const response = await fetch(API_URL);
+                    const productos = await response.json();
+                    const tbody = document.getElementById('productos-tbody');
+                    tbody.innerHTML = '';
+                    productos.forEach(prod => {
+                        const row = document.createElement('tr');
+                        row.innerHTML = \`
+                            <td>\${prod.id}</td>
+                            <td>\${prod.nombre}</td>
+                            <td>\${prod.precio}</td>
+                            <td>\${prod.stock}</td>
+                            <td class="actions">
+                                <button class="btn-yellow" onclick="editarProducto(\${prod.id}, '\${prod.nombre}', \${prod.precio}, \${prod.stock})">✏️ Editar</button>
+                                <button class="btn-red" onclick="eliminarProducto(\${prod.id})">🗑 Eliminar</button>
+                            </td>
+                        \`;
+                        tbody.appendChild(row);
+                    });
+                } catch (error) {
+                    console.error('Error cargando productos:', error);
+                }
+            }
+
+            async function guardarProducto() {
+                const nombre = document.getElementById('nombre').value;
+                const precio = document.getElementById('precio').value;
+                const stock = document.getElementById('stock').value;
+                if (!nombre || !precio || !stock) return alert('Completa todos los campos');
+                try {
+                    await fetch(API_URL, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ nombre, precio: parseInt(precio), stock: parseInt(stock) })
+                    });
+                    document.getElementById('nombre').value = '';
+                    document.getElementById('precio').value = '';
+                    document.getElementById('stock').value = '';
+                    cargarProductos();
+                } catch (error) {
+                    console.error('Error guardando producto:', error);
+                }
+            }
+
+            function editarProducto(id, nombre, precio, stock) {
+                document.getElementById('nombre').value = nombre;
+                document.getElementById('precio').value = precio;
+                document.getElementById('stock').value = stock;
+                document.getElementById('guardar').onclick = () => actualizarProducto(id);
+                document.getElementById('guardar').textContent = '💾 Actualizar';
+            }
+
+            async function actualizarProducto(id) {
+                const nombre = document.getElementById('nombre').value;
+                const precio = document.getElementById('precio').value;
+                const stock = document.getElementById('stock').value;
+                if (!nombre || !precio || !stock) return alert('Completa todos los campos');
+                try {
+                    await fetch(\`\${API_URL}/\${id}\`, {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ nombre, precio: parseInt(precio), stock: parseInt(stock) })
+                    });
+                    document.getElementById('nombre').value = '';
+                    document.getElementById('precio').value = '';
+                    document.getElementById('stock').value = '';
+                    document.getElementById('guardar').onclick = guardarProducto;
+                    document.getElementById('guardar').textContent = '💾 Guardar';
+                    cargarProductos();
+                } catch (error) {
+                    console.error('Error actualizando producto:', error);
+                }
+            }
+
+            async function eliminarProducto(id) {
+                if (!confirm('¿Eliminar producto?')) return;
+                try {
+                    await fetch(\`\${API_URL}/\${id}\`, { method: 'DELETE' });
+                    cargarProductos();
+                } catch (error) {
+                    console.error('Error eliminando producto:', error);
+                }
+            }
+
+            document.getElementById('guardar').onclick = guardarProducto;
+            window.onload = cargarProductos;
+        </script>
     </body>
     </html>
     `);
 });
 
-app.listen(3000, () => {
-    console.log('🔥 Servidor en http://localhost:3000');
+app.listen(3001, () => {
+    console.log('🔥 Servidor frontend en http://localhost:3001');
 });

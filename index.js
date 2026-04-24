@@ -25,10 +25,10 @@ db.run(`CREATE TABLE IF NOT EXISTS productos (
 //Create
 
 app.post(`/productos`, (req, res) => {
-    const { nombre, Precio, stock} = req.body;
+    const { nombre, precio, stock} = req.body;
     db.run(
-        'INSERT INTO productos (nombre, Precio, stock) VALUES (?, ?, ?)',
-        [nombre, Precio, stock],
+        'INSERT INTO productos (nombre, precio, stock) VALUES (?, ?, ?)',
+        [nombre, precio, stock],
         function(err) {
             if(err) return res.status(500).send(err.message);
             res.send('producto registrado');
@@ -45,10 +45,10 @@ app.get(`/productos`, (req, res) => {
 });
 
 app.put(`/productos/:id`, (req, res) => {
-    const { nombre, Precio, stock} = req.body;
+    const { nombre, precio, stock} = req.body;
     db.run(
-        'UPDATE productos SET nombre=?, Precio=?, stock=? WHERE id=?',
-        [nombre, Precio, stock, req.params.id],
+        'UPDATE productos SET nombre=?, precio=?, stock=? WHERE id=?',
+        [nombre, precio, stock, req.params.id],
         function(err){
             if (err) return res.status(500).send(err.message);
             res.send('producto actualizado')
